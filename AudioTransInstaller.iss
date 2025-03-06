@@ -76,30 +76,6 @@ Type: files; Name: "{app}\audiotrans_preferences.json"
 Type: filesandordirs; Name: "{app}\__pycache__"
 
 [Code]
-// Function to check if we're running on Windows 11
-function IsWindows11OrNewer: Boolean;
-var
-  Version: TWindowsVersion;
-begin
-  GetWindowsVersionEx(Version);
-  Result := (Version.Major > 10) or ((Version.Major = 10) and (Version.Build >= 22000));
-end;
-
-// Function to check system requirements
-function InitializeSetup(): Boolean;
-begin
-  // Check if running on Windows 10 or newer
-  if not (IsWindows64 and ((GetWindowsVersion >= $0A00) or IsWindows11OrNewer)) then
-  begin
-    MsgBox('This application requires a 64-bit version of Windows 10 or newer.', mbError, MB_OK);
-    Result := False;
-    Exit;
-  end;
-  
-  // Simple approach - always return true without complex memory checking
-  Result := True;
-end;
-
 // Show a message about first run and model download
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
