@@ -1,5 +1,4 @@
 import torch
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 import os
 from datetime import datetime
 import threading
@@ -13,6 +12,16 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import sys
 import platform
+
+# Try to import accelerate - it's optional but will improve performance
+try:
+    import accelerate
+    HAS_ACCELERATE = True
+except ImportError:
+    HAS_ACCELERATE = False
+
+# Now import the transformers components
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 
 # Définir les thèmes et l'apparence
 ctk.set_appearance_mode("System")  # Modes: "Dark", "Light", "System"
@@ -610,12 +619,22 @@ class ModernAudioTranscriptionApp(ctk.CTk):
                 time.sleep(0.5)  # Permettre à l'UI de se mettre à jour
                 
                 # Optimisations pour la mémoire et les performances
+                # Vérifier si accélerate est disponible avant d'utiliser les options qui en dépendent
+                model_kwargs = {
+                    "torch_dtype": torch_dtype,
+                    "attn_implementation": "eager"  # Optimisation pour l'attention
+                }
+                
+                # Ajouter les options qui nécessitent Accelerate uniquement si disponible
+                if HAS_ACCELERATE:
+                    model_kwargs.update({
+                        "low_cpu_mem_usage": True,
+                        "use_safetensors": True
+                    })
+                
                 self.model = AutoModelForSpeechSeq2Seq.from_pretrained(
                     model_id,
-                    torch_dtype=torch_dtype,
-                    low_cpu_mem_usage=True,
-                    use_safetensors=True,
-                    attn_implementation="eager"  # Optimisation pour l'attention
+                    **model_kwargs
                 )
                 
                 self.progress_value.set(0.6)
@@ -1170,6 +1189,12 @@ class ModernAudioTranscriptionApp(ctk.CTk):
 
 if __name__ == "__main__":
     try:
+        # Check if accelerate is available and warn if not
+        if not HAS_ACCELERATE:
+            print("WARNING: The 'accelerate' package is not installed.")
+            print("The application will still function, but for better performance")
+            print("consider installing it with: pip install 'accelerate>=0.26.0'")
+            
         app = ModernAudioTranscriptionApp()
         
         # Détecter le périphérique
