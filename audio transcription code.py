@@ -117,10 +117,18 @@ class ModernAudioTranscriptionApp(ctk.CTk):
             print(f"Erreur lors de la sauvegarde des préférences: {e}")
         
     def setup_ui(self):
-        """Créer l'interface utilisateur moderne"""
-        # Conteneur principal avec padding et arrière-plan arrondi
-        main_frame = ctk.CTkFrame(self, corner_radius=15)
-        main_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        """Créer l'interface utilisateur moderne avec défilement"""
+        # Conteneur externe pour contenir le cadre défilable
+        outer_frame = ctk.CTkFrame(self, corner_radius=15)
+        outer_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        # Remplacer le conteneur principal par un cadre défilable
+        main_frame = ctk.CTkScrollableFrame(
+            outer_frame, 
+            corner_radius=15,
+            fg_color=("gray95", "gray10"),  # Couleurs pour modes clair/sombre
+        )
+        main_frame.pack(fill="both", expand=True, padx=5, pady=5)
         
         # Barre d'outils supérieure avec style amélioré
         toolbar_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
