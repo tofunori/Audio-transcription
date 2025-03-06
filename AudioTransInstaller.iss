@@ -51,10 +51,8 @@ Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "VERIFICATION.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "antivirus_instructions.txt"; DestDir: "{app}"; Flags: ignoreversion
-
-; Create an initial preferences file to avoid errors
-[INI]
-Filename: "{app}\audiotrans_preferences.json"; Section: "JSON"; Key: ""; String: "{\n  \"theme\": \"System\",\n  \"language\": \"fr\",\n  \"format\": \"txt\",\n  \"precision\": 0.0,\n  \"timestamps\": false,\n  \"beam_size\": 1\n}"; Flags: createkeyifdoesntexist
+; Default preferences file - will only be copied if it doesn't exist already
+Source: "default_preferences.json"; DestDir: "{app}"; DestName: "audiotrans_preferences.json"; Flags: onlyifdoesntexist
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
