@@ -1,0 +1,36 @@
+Antivirus Instructions for AudioTrans Pro
+=======================================
+
+If your antivirus software flags AudioTrans Pro, here are the steps to whitelist the application:
+
+1. Temporary Files During Installation
+-----------------------------------
+During installation, you may need to temporarily disable real-time scanning. After installation is complete, you can re-enable it.
+
+2. Whitelisting Instructions for Common Antivirus Software
+------------------------------------------------------
+
+Windows Defender:
+1. Open Windows Security
+2. Go to "Virus & threat protection"
+3. Under "Virus & threat protection settings", click "Manage settings"
+4. Scroll down to "Exclusions"
+5. Click "Add or remove exclusions"
+6. Add the installation directory (typically C:\Program Files\AudioTrans Pro)
+
+Other Antivirus Software:
+- The application is built with standard tools and contains no malicious code
+- All source code is available for inspection
+- The installer is not obfuscated or packed with suspicious techniques
+- The application runs with standard user privileges
+
+If you continue to experience issues, please:
+1. Verify the installation files were downloaded from the official source
+2. Check that the installer's digital signature is intact
+3. Contact your antivirus vendor's support if needed
+
+Security Features:
+- No system modifications outside installation directory
+- No background services or hidden processes
+- All operations are transparent and user-initiated
+- No network connections except for explicit user actions

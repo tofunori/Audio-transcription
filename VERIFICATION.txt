@@ -1,0 +1,41 @@
+Verification and Security Information for AudioTrans Pro
+=====================================================
+
+How to Verify This Software
+--------------------------
+
+1. Installer Verification
+   - The installer is distributed with SHA-256 checksums
+   - You can verify the installer's integrity using:
+     PowerShell: Get-FileHash AudioTrans_Setup.exe -Algorithm SHA256
+     
+2. Application Components
+   - All executable files are compiled from the provided source code
+   - No external dependencies are downloaded during installation
+   - All required libraries are bundled within the installer
+
+3. Security Measures
+   - The application runs with standard user privileges
+   - No background services are installed
+   - All file operations are limited to the installation directory
+   - No system modifications outside the installation scope
+
+4. Source Code
+   - Source code is available for inspection
+   - Built using standard Python libraries and tools:
+     * PyInstaller (application packaging)
+     * Inno Setup (installer creation)
+
+5. Antivirus Considerations
+   - The application is built with standard tools
+   - No code obfuscation is used
+   - No encrypted payloads
+   - Clear, readable installation process
+
+If you encounter any security warnings:
+1. Verify the installer using the SHA-256 checksum
+2. Review the antivirus_instructions.txt file
+3. Check that the installation source is trusted
+4. Verify all files are properly signed (when applicable)
+
+For additional verification or security concerns, please visit the project repository.
