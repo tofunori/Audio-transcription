@@ -1,34 +1,38 @@
 #define MyAppName "AudioTrans Pro"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "Audio Transcription"
-#define MyAppExeName "AudioTrans.exe"
+#define MyAppURL "https://github.com/tofunori/Audio-transcription"
+#define MyAppExeName "AudioTransPro.exe"
 
 [Setup]
 ; Unique identifier for the app
 AppId={{F4A36F2E-9F6A-4E48-B5C1-89F99BBBF021}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-; Add publisher URL and other details for legitimacy
-AppPublisherURL=https://github.com
-AppSupportURL=https://github.com
-AppUpdatesURL=https://github.com
-; Sign the installer if you have a certificate
-;SignTool=standard
-; Compression settings that don't trigger AV
-Compression=lzma2/normal
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=installer
-OutputBaseFilename=AudioTrans_Setup
+OutputBaseFilename=AudioTransPro_Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
 DisableWelcomePage=no
 DisableDirPage=no
 DisableProgramGroupPage=no
-PrivilegesRequired=lowest
+; Request admin rights to avoid permission issues
+PrivilegesRequired=admin
+; Set minimum Windows version (Windows 10 recommended for ML apps)
+MinVersion=10.0
+SetupIconFile=app_icon.ico
+UninstallDisplayIcon={app}\{#MyAppExeName}
+; Create a log file during installation
+SetupLogging=yes
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -36,38 +40,79 @@ Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 
 [Files]
-; Add file information and verification
-Source: "dist\AudioTransPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs signonce nocompression
-; Add documentation files
+; Main application files
+Source: "dist\AudioTransPro\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\AudioTransPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Documentation
 Source: "README.txt"; DestDir: "{app}"; Flags: ignoreversion isreadme
-Source: "antivirus_instructions.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "VERIFICATION.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "antivirus_instructions.txt"; DestDir: "{app}"; Flags: ignoreversion
 
-[Messages]
-WelcomeLabel2=This will install [name] on your computer.%n%nThis software is licensed under the MIT License. Security verification information is available in VERIFICATION.txt.%n%nThe installer and program files are not encrypted or obfuscated, and can be verified using the provided checksums.%n%nBy continuing, you agree to the terms of the license agreement.
-
-[InstallDelete]
-; Clean up old files to prevent conflicts
-Type: filesandordirs; Name: "{app}\*"
+; Create an initial preferences file to avoid errors
+[INI]
+Filename: "{app}\audiotrans_preferences.json"; Section: "JSON"; Key: ""; String: "{\n  \"theme\": \"System\",\n  \"language\": \"fr\",\n  \"format\": \"txt\",\n  \"precision\": 0.0,\n  \"timestamps\": false,\n  \"beam_size\": 1\n}"; Flags: createkeyifdoesntexist
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\Documentation\README"; Filename: "{app}\README.txt"
+Name: "{group}\Documentation\License"; Filename: "{app}\LICENSE.txt"
+Name: "{group}\Documentation\Verification"; Filename: "{app}\VERIFICATION.txt"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Run]
 ; Show important files after installation
-Filename: "{app}\LICENSE.txt"; Description: "View License Agreement"; Flags: postinstall shellexec skipifsilent
 Filename: "{app}\README.txt"; Description: "View README file"; Flags: postinstall shellexec skipifsilent
-Filename: "{app}\antivirus_instructions.txt"; Description: "View Antivirus Instructions"; Flags: postinstall shellexec skipifsilent
 Filename: "{app}\VERIFICATION.txt"; Description: "View Security Verification Information"; Flags: postinstall shellexec skipifsilent
+Filename: "{app}\antivirus_instructions.txt"; Description: "View Antivirus Instructions"; Flags: postinstall shellexec skipifsilent
+; Launch app after installation
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[UninstallDelete]
+Type: files; Name: "{app}\audiotrans_preferences.json"
+Type: filesandordirs; Name: "{app}\__pycache__"
+
 [Code]
+// Function to check if we're running on Windows 11
+function IsWindows11OrNewer: Boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  Result := (Version.Major > 10) or ((Version.Major = 10) and (Version.Build >= 22000));
+end;
+
+// Function to check system requirements
 function InitializeSetup(): Boolean;
 begin
+  // Check for minimum RAM (8GB)
+  if (GetPhysicalMemoryInMB < 8192) then
+  begin
+    MsgBox('Warning: This application requires at least 8GB of RAM for optimal performance. Your system has less than the recommended amount.', mbInformation, MB_OK);
+    // We'll still allow installation but warn the user
+  end;
+  
+  // Check if running on Windows 10 or newer
+  if not (IsWindows64 and ((GetWindowsVersion >= $0A00) or IsWindows11OrNewer)) then
+  begin
+    MsgBox('This application requires a 64-bit version of Windows 10 or newer.', mbError, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  
   Result := True;
+end;
+
+// Show a message about first run and model download
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    MsgBox('When you first run AudioTrans Pro, it will download the necessary AI models. This may take some time depending on your internet connection. Please be patient during the first launch.', mbInformation, MB_OK);
+  end;
 end;

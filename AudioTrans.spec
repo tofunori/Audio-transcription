@@ -2,18 +2,40 @@
 
 block_cipher = None
 
+# Icon file path - create an icon for your app
+icon_file = 'app_icon.ico'  # Replace with your actual icon file
+
 a = Analysis(
     ['audio transcription code.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        # Add any additional data files your app needs
+        # Example: ('path/to/data/file', 'destination/in/bundle')
+    ],
     hiddenimports=[
         'torch',
+        'torch.backends.cudnn',
         'transformers',
+        'transformers.models.whisper',
+        'transformers.models.whisper.processing_whisper',
+        'transformers.models.whisper.tokenization_whisper',
+        'transformers.models.whisper.configuration_whisper',
+        'transformers.models.whisper.modeling_whisper',
         'librosa',
+        'librosa.core',
+        'librosa.util',
+        'librosa.feature',
+        'librosa.filters',
         'python-docx',
+        'docx',
         'customtkinter',
         'PIL',
+        'PIL._tkinter_finder',
+        'json',
+        'threading',
+        'platform',
+        'numpy'
     ],
     hookspath=[],
     hooksconfig={},
@@ -21,8 +43,8 @@ a = Analysis(
     excludes=[],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
-    cipher=None,  # Disable encryption to reduce AV flags
-    noarchive=True,  # Disable archive to make content more transparent
+    cipher=block_cipher,
+    noarchive=False,
 )
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
@@ -37,13 +59,13 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
-    console=True,  # Enable console for transparency
-    runtime_tmpdir=None,  # Store temporary files in installation directory
+    console=False,  # Changed to False to hide console window for end users
+    runtime_tmpdir=None,
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='NONE'
+    icon=icon_file if os.path.exists(icon_file) else None
 )
 
 coll = COLLECT(
