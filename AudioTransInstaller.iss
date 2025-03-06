@@ -85,14 +85,28 @@ begin
   Result := (Version.Major > 10) or ((Version.Major = 10) and (Version.Build >= 22000));
 end;
 
+// Function to get system memory
+function GetSystemMemoryStatus(var ms: TMemoryStatusEx): Boolean;
+external 'GlobalMemoryStatusEx@kernel32.dll stdcall';
+
 // Function to check system requirements
 function InitializeSetup(): Boolean;
+var
+  MemStatus: TMemoryStatusEx;
+  MemInMB: Cardinal;
 begin
-  // Check for minimum RAM (8GB)
-  if (GetPhysicalMemoryInMB < 8192) then
+  // Check RAM using proper Windows API
+  MemStatus.dwLength := SizeOf(MemStatus);
+  if GetSystemMemoryStatus(MemStatus) then
   begin
-    MsgBox('Warning: This application requires at least 8GB of RAM for optimal performance. Your system has less than the recommended amount.', mbInformation, MB_OK);
-    // We'll still allow installation but warn the user
+    // Convert total physical memory to MB
+    MemInMB := MemStatus.ullTotalPhys div (1024 * 1024);
+    
+    if MemInMB < 8192 then
+    begin
+      MsgBox('Warning: This application requires at least 8GB of RAM for optimal performance. Your system has less than the recommended amount.', mbInformation, MB_OK);
+      // We'll still allow installation but warn the user
+    end;
   end;
   
   // Check if running on Windows 10 or newer
