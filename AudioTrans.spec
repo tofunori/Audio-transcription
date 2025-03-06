@@ -22,6 +22,13 @@ a = Analysis(
         'transformers.models.whisper.tokenization_whisper',
         'transformers.models.whisper.configuration_whisper',
         'transformers.models.whisper.modeling_whisper',
+        # Add Accelerate and its dependencies
+        'accelerate',
+        'accelerate.utils',
+        'accelerate.commands',
+        'safetensors',
+        'safetensors.torch',
+        # Original imports
         'librosa',
         'librosa.core',
         'librosa.util',
