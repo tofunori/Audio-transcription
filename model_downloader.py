@@ -5,8 +5,17 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
-from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
 import torch
+
+# Try to import accelerate first to ensure it's available
+try:
+    import accelerate
+    from accelerate.utils import is_accelerate_available
+    HAS_ACCELERATE = True
+except ImportError:
+    HAS_ACCELERATE = False
+
+from transformers import AutoProcessor, AutoModelForSpeechSeq2Seq
 
 # Define models path
 def get_models_dir():
@@ -128,6 +137,73 @@ class ModelDownloaderApp(ctk.CTk):
             self.progress_var.set(1.0)
             self.download_btn.configure(state="disabled")
         
+        # Check if accelerate is available
+        if not HAS_ACCELERATE:
+            self.show_accelerate_warning()
+    
+    def show_accelerate_warning(self):
+        """Show a warning if accelerate is not available"""
+        warning_window = ctk.CTkToplevel(self)
+        warning_window.title("Missing Dependency")
+        warning_window.geometry("500x250")
+        warning_window.resizable(False, False)
+        warning_window.transient(self)
+        warning_window.grab_set()
+        
+        # Center the window
+        warning_window.update_idletasks()
+        x = self.winfo_x() + (self.winfo_width() - warning_window.winfo_width()) // 2
+        y = self.winfo_y() + (self.winfo_height() - warning_window.winfo_height()) // 2
+        warning_window.geometry(f"+{x}+{y}")
+        
+        # Warning message
+        message_label = ctk.CTkLabel(
+            warning_window,
+            text="Required Package Missing: Accelerate",
+            font=("Segoe UI", 16, "bold")
+        )
+        message_label.pack(pady=(20, 10))
+        
+        info_label = ctk.CTkLabel(
+            warning_window,
+            text=(
+                "The 'accelerate' package is required for loading large AI models efficiently.\n"
+                "Without it, the application might crash when loading the model.\n\n"
+                "Please install it with the command:\n"
+                "pip install 'accelerate>=0.26.0'"
+            ),
+            font=("Segoe UI", 12)
+        )
+        info_label.pack(pady=10)
+        
+        # Button frame
+        button_frame = ctk.CTkFrame(warning_window, fg_color="transparent")
+        button_frame.pack(fill="x", padx=10, pady=20)
+        
+        # Skip anyway button
+        continue_btn = ctk.CTkButton(
+            button_frame,
+            text="Continue Anyway",
+            command=warning_window.destroy,
+            width=150,
+            height=35,
+            fg_color="#d63031",
+            font=("Segoe UI", 12, "bold")
+        )
+        continue_btn.pack(side="left", padx=20)
+        
+        # Exit button
+        exit_btn = ctk.CTkButton(
+            button_frame,
+            text="Exit",
+            command=self.exit_app,
+            width=100,
+            height=35,
+            fg_color="#777777",
+            font=("Segoe UI", 12)
+        )
+        exit_btn.pack(side="right", padx=20)
+        
     def check_model_exists(self):
         """Check if the model files already exist"""
         # Basic check - this can be improved to verify all required files
@@ -172,12 +248,22 @@ class ModelDownloaderApp(ctk.CTk):
             device = "cuda:0" if torch.cuda.is_available() else "cpu"
             torch_dtype = torch.float16 if device == "cuda:0" else torch.float32
             
+            # Configure model loading arguments based on accelerate availability
+            model_args = {
+                "torch_dtype": torch_dtype,
+                "cache_dir": cache_dir
+            }
+            
+            # Add optimization parameters only if accelerate is available
+            if HAS_ACCELERATE:
+                model_args.update({
+                    "low_cpu_mem_usage": True,
+                    "use_safetensors": True
+                })
+            
             model = AutoModelForSpeechSeq2Seq.from_pretrained(
                 model_id,
-                torch_dtype=torch_dtype,
-                low_cpu_mem_usage=True,
-                use_safetensors=True,
-                cache_dir=cache_dir
+                **model_args
             )
             
             self.progress_var.set(0.9)
@@ -189,6 +275,7 @@ class ModelDownloaderApp(ctk.CTk):
                 f.write(f"Model: {model_id}\n")
                 f.write(f"Downloaded: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
                 f.write(f"Device: {device}\n")
+                f.write(f"Accelerate available: {HAS_ACCELERATE}\n")
             
             # Complete
             self.progress_var.set(1.0)
