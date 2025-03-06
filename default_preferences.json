@@ -1,0 +1,8 @@
+{
+  "theme": "System",
+  "language": "fr",
+  "format": "txt",
+  "precision": 0.0,
+  "timestamps": false,
+  "beam_size": 1
+}
